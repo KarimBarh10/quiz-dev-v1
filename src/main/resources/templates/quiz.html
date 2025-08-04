@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Interactive Quiz App</title>
+    <style>
+        body {
+            background: linear-gradient(135deg, #6d28d9, #1e1b4b);
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        /* ===== Header Area ===== */
+        .main-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .main-header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .main-header h2 {
+            font-size: 1.8rem;
+            margin-bottom: 40px;
+            font-weight: normal;
+            opacity: 0.9;
+        }
+
+        .quiz-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .quiz-header img {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+        }
+
+        /* Large brain emoji for "All" quiz */
+        .quiz-header .big-brain {
+            font-size: 5rem;
+            text-shadow: 2px 2px 4px black;
+        }
+
+        .quiz-title {
+            font-size: 2.4rem;
+            text-align: center;
+        }
+
+        /* ===== Landing Page ===== */
+        .landing-container {
+            text-align: center;
+            animation: fadeIn 1s ease-in-out;
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+        }
+
+        .category-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 18px 30px;
+            font-size: 1.4rem;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            color: white;
+            transition: 0.3s;
+            min-width: 200px;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .category-btn img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .java-btn { background: #dc2626; }
+        .java-btn:hover { background: #b91c1c; }
+
+        .spring-btn { background: #16a34a; }
+        .spring-btn:hover { background: #15803d; }
+
+        .sql-btn { background: #2563eb; }
+        .sql-btn:hover { background: #1d4ed8; }
+
+        .all-btn { background: linear-gradient(135deg, #9333ea, #3b82f6); }
+        .all-btn:hover { filter: brightness(1.1); }
+
+        /* ===== Quiz Container ===== */
+        .quiz-container {
+            display: none;
+            padding: 50px 70px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5);
+            width: 70vw;
+            max-width: 900px;
+            animation: fadeIn 1s ease-in-out;
+            transition: background-color 0.5s ease;
+            color: #fff;
+        }
+
+        .java-bg { background-color: #ef4444; }
+        .springboot-bg { background-color: #22c55e; color: #f0fdf4; }
+        .sql-bg { background-color: #2563eb; }
+
+        .question {
+            font-size: 2.3rem;
+            margin-bottom: 35px;
+            min-height: 100px;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .answer {
+            display: none;
+            margin-top: 30px;
+            font-weight: bold;
+            font-size: 2rem;
+            animation: fadeIn 0.5s ease-in-out;
+            color: inherit;
+        }
+
+        button {
+            margin: 20px 10px 0 10px;
+            padding: 14px 30px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #3b82f6;
+            color: #fff;
+            transition: 0.3s;
+        }
+
+        button:hover { background: #2563eb; transform: scale(1.1); }
+
+        .answer-buttons {
+            display: none;
+            margin-top: 20px;
+        }
+
+        /* ✅ Only the emoji has black shadow */
+        .correct-btn {
+            background: #facc15; /* Yellow star */
+            color: #000;
+            font-size: 1.3rem;
+        }
+        .correct-btn::before {
+            content: "⭐ ";
+            text-shadow: 2px 2px 4px black;
+        }
+
+        .correct-btn:hover {
+            background: #eab308;
+        }
+
+        .wrong-btn {
+            background: #f97316;
+            color: #fff;
+            font-size: 1.3rem;
+        }
+        .wrong-btn::before {
+            content: "❌ ";
+            text-shadow: 2px 2px 4px black;
+        }
+
+        .wrong-btn:hover { background: #ea580c; }
+
+        .counters { margin-top: 20px; font-size: 1.2rem; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+<!-- ===== Main Header ===== -->
+<div id="mainHeader" class="main-header">
+    <h1>👨‍💻 Welcome to the Quiz Portal 👨‍💻</h1>
+    <h2>Select a category to start your journey</h2>
+</div>
+
+<!-- ===== Landing Page ===== -->
+<div class="landing-container" id="landingPage">
+    <button class="category-btn java-btn" onclick="startQuiz('java')">
+        <img src="/media/java-logo.svg" alt="Java Logo"> Java Quiz
+    </button>
+    <button class="category-btn spring-btn" onclick="startQuiz('springboot')">
+        <img src="/media/spring-logo.svg" alt="Spring Logo"> Spring Boot Quiz
+    </button>
+    <button class="category-btn sql-btn" onclick="startQuiz('sql')">
+        <img src="/media/sql-logo.svg" alt="SQL Logo"> SQL Quiz
+    </button>
+    <button class="category-btn all-btn" onclick="startQuiz('all')">
+        🧠 All Questions
+    </button>
+</div>
+
+<!-- ===== Quiz Page ===== -->
+<div id="quizContainer" class="quiz-container">
+    <div class="question" id="questionText"></div>
+    <div class="answer" id="answerText"></div>
+    <div class="answer-buttons">
+        <button class="correct-btn" onclick="markAnswer(true)">I got it right</button>
+        <button class="wrong-btn" onclick="markAnswer(false)">I got it wrong</button>
+    </div>
+
+    <button onclick="showAnswer()">💡 Show Answer</button>
+    <button onclick="nextQuestion()">➡ Next Question</button>
+    <button onclick="goBack()">🔙 Back to Menu</button>
+
+    <div class="counters">
+        <span id="progressCounter"></span> | Correct: <span id="correctCounter">0</span>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    let allQuestions = [[${questions}]];
+    let questions = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+
+    const mainHeader = document.getElementById('mainHeader');
+    const landingPage = document.getElementById('landingPage');
+    const quizContainer = document.getElementById('quizContainer');
+    const questionEl = document.getElementById('questionText');
+    const answerEl = document.getElementById('answerText');
+    const answerButtons = document.querySelector('.answer-buttons');
+    const progressCounter = document.getElementById('progressCounter');
+    const correctCounter = document.getElementById('correctCounter');
+
+    function startQuiz(category) {
+        if (category === 'all') {
+            questions = allQuestions;
+        } else {
+            questions = allQuestions.filter(q =>
+                q.subject && q.subject.toLowerCase() === category.toLowerCase()
+            );
+        }
+
+        if (questions.length === 0) {
+            alert(`No questions found for category "${category}"`);
+            return;
+        }
+
+        currentIndex = 0;
+        correctCount = 0;
+        correctCounter.textContent = correctCount;
+
+        if(category === 'java') {
+            mainHeader.innerHTML = `
+                <div class="quiz-header">
+                    <img src="/media/java-logo.svg">
+                    <h1 class="quiz-title">Test Your Java Knowledge</h1>
+                    <img src="/media/java-logo.svg">
+                </div>
+            `;
+        } else if(category === 'springboot') {
+            mainHeader.innerHTML = `
+                <div class="quiz-header">
+                    <img src="/media/spring-logo.svg">
+                    <h1 class="quiz-title">Master Your Spring Boot Skills</h1>
+                    <img src="/media/spring-logo.svg">
+                </div>
+            `;
+        } else if(category === 'sql') {
+            mainHeader.innerHTML = `
+                <div class="quiz-header">
+                    <img src="/media/sql-logo.svg">
+                    <h1 class="quiz-title">Conquer SQL Challenges</h1>
+                    <img src="/media/sql-logo.svg">
+                </div>
+            `;
+        } else if(category === 'all') {
+            mainHeader.innerHTML = `
+                <div class="quiz-header">
+                    <span class="big-brain">🧠</span>
+                    <h1 class="quiz-title">Test Your Knowledge</h1>
+                    <span class="big-brain">🧠</span>
+                </div>
+            `;
+        }
+
+        landingPage.style.display = 'none';
+        quizContainer.style.display = 'block';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        if (currentIndex < questions.length) {
+            const current = questions[currentIndex];
+            questionEl.textContent = current.question;
+            answerEl.textContent = current.answer;
+            answerEl.style.display = 'none';
+            answerButtons.style.display = 'none';
+            progressCounter.textContent = (currentIndex + 1) + "/" + questions.length;
+
+            quizContainer.classList.remove('java-bg', 'springboot-bg', 'sql-bg');
+            const subject = current.subject ? current.subject.toLowerCase() : "";
+            if(subject === 'java') quizContainer.classList.add('java-bg');
+            else if(subject === 'springboot') quizContainer.classList.add('springboot-bg');
+            else if(subject === 'sql') quizContainer.classList.add('sql-bg');
+            else quizContainer.style.backgroundColor = '#1e293b';
+        } else {
+            questionEl.textContent = "🎉 You've completed the quiz!";
+            answerEl.style.display = 'none';
+            answerButtons.style.display = 'none';
+            quizContainer.classList.remove('java-bg', 'springboot-bg', 'sql-bg');
+            quizContainer.style.backgroundColor = '#1e293b';
+            progressCounter.textContent = questions.length + "/" + questions.length;
+        }
+    }
+
+    function showAnswer() {
+        answerEl.style.display = 'block';
+        answerButtons.style.display = 'block';
+    }
+
+    function markAnswer(isCorrect) {
+        if (isCorrect) {
+            correctCount++;
+            correctCounter.textContent = correctCount;
+        }
+        nextQuestion();
+    }
+
+    function nextQuestion() {
+        currentIndex++;
+        showQuestion();
+    }
+
+    function goBack() {
+        mainHeader.innerHTML = `
+            <h1>👨‍💻 Welcome to the Quiz Portal 👨‍💻</h1>
+            <h2>Select a category to start your journey</h2>
+        `;
+        quizContainer.style.display = 'none';
+        landingPage.style.display = 'flex';
+    }
+</script>
+</body>
+</html>
