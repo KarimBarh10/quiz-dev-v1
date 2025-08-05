@@ -232,9 +232,20 @@
 
 <script th:inline="javascript">
     let allQuestions = [[${questions}]];
+    console.log('All questions loaded:', allQuestions.length);
+
     let questions = [];
     let currentIndex = 0;
     let correctCount = 0;
+    let currentCategory = '';
+
+    // ✅ State for each quiz category
+    let quizStates = {
+        java: { index: 0, correct: 0 },
+        springboot: { index: 0, correct: 0 },
+        sql: { index: 0, correct: 0 },
+        all: { index: 0, correct: 0 }
+    };
 
     const mainHeader = document.getElementById('mainHeader');
     const landingPage = document.getElementById('landingPage');
@@ -246,6 +257,8 @@
     const correctCounter = document.getElementById('correctCounter');
 
     function startQuiz(category) {
+        currentCategory = category;
+
         if (category === 'all') {
             questions = allQuestions;
         } else {
@@ -259,10 +272,12 @@
             return;
         }
 
-        currentIndex = 0;
-        correctCount = 0;
+        // ✅ Restore progress for this category
+        currentIndex = quizStates[category].index;
+        correctCount = quizStates[category].correct;
         correctCounter.textContent = correctCount;
 
+        // Update header based on category
         if(category === 'java') {
             mainHeader.innerHTML = `
                 <div class="quiz-header">
@@ -342,6 +357,9 @@
 
     function nextQuestion() {
         currentIndex++;
+        // ✅ Save progress for this category
+        quizStates[currentCategory].index = currentIndex;
+        quizStates[currentCategory].correct = correctCount;
         showQuestion();
     }
 
